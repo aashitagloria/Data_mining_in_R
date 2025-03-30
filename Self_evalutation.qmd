@@ -1,0 +1,127 @@
+---
+title: "Self evaluation"
+format: html
+editor: visual
+embed-resources: true
+---
+
+This is a traning for the final exam
+
+```{r, echo=F,warning=FALSE,message=FALSE}
+
+library("FactoMineR")
+library("factoextra") 
+library("datasets")
+```
+
+Consider the data set *mtcars*, loaded by
+
+```{r}
+data(mtcars)
+```
+
+The data was extracted from the 1974 Motor Trend US magazine, and comprises fuel consumption and 10 aspects of automobile design and performance for 32 automobiles (1973–74 models). For each car the data-set contains the following variables:
+
+-   *mpg* Miles/(US) gallon
+
+-   *cyl* Number of cylinders
+
+-   *disp* Displacement (cu.in.)
+
+-   \*hp\* Gross horsepower
+
+-   *drat* Rear axle ratio
+
+-   *wt* Weight (1000 lbs)
+
+-   *qsec* 1/4 mile time
+
+-   *vs* V/S
+
+-   *am* Transmission (0 = automatic, 1 = manual)
+
+-   *gear* Number of forward gears - carb Number of carburetors
+
+1)  Compute *mean*, *median* and *sd* for each variable
+
+```{r}
+# your code goes here
+
+summary_stats <- data.frame(
+  Variable = colnames(mtcars),
+  Mean = sapply(mtcars, mean),
+  Median = sapply(mtcars, median),
+  SD = sapply(mtcars, sd)
+)
+
+print(summary_stats)
+```
+
+2)  Create a scatterplot of *Displacement* versus *Gross horsepower*, can we see any relation between these variables?
+
+From the graph below we can observe a positive correlation between displacement and horsepower as both are increasing
+
+```{r}
+# your code goes here
+library(ggplot2)
+
+ggplot(mtcars, aes(x = disp, y = hp)) +
+  geom_point(color = "blue") +
+  labs(title = "Scatterplot of Displacement vs Horsepower", 
+       x = "Displacement (cu.in.)", 
+       y = "Gross Horsepower") +
+  theme_minimal()
+
+```
+
+3)  Compute the *correlation coefficient* between these two variable. Does it support the idea you had by looking at the scatterplot?
+
+The coefficient being 0.791 indicates it is strongly positive as evident in the scatter graph above being directly proportional
+
+```{r}
+# your code goes here
+
+correlation <- cor(mtcars$disp, mtcars$hp)
+print(correlation)
+```
+
+4)  Run a PCA. How many dimensions would you retain? look at the eigenvalues by using the *fviz_screeplot* function from the *factoextra* package
+
+Here we find that the first two pca explains 84% of the variance. We should retain these two as they have eigenvalue higher than 1
+
+```{r}
+# your code goes here
+pca_result <- PCA(mtcars, scale.unit = TRUE, graph = FALSE)
+fviz_screeplot(pca_result, addlabels = TRUE, ylim = c(0, 50))
+pca_result$eig
+
+```
+
+6)  Plot the variables by controlling for their contributions (tips use the *col.var* option in the *fviz_pca_var* function)
+
+Displacement (disp), horsepower (hp), no of cylinder (cyl) and weight are positively correlated and close suggesting that heavier cars tend to have more cylinders, larger engine displacement, and higher horsepower.
+
+The mpg (fuel efficiency) arrow points opposite to hp (horsepower) and wt (weight), indicating a strong negative correlation suggesting that cars with higher horsepower and weight tend to have lower fuel efficiency (mpg).
+
+```{r}
+# your code goes here
+fviz_pca_var(pca_result, 
+             col.var = "contrib",   
+             gradient.cols = c("blue", "red"), 
+             repel = TRUE)
+
+```
+
+7)  Produce a plot to display cars, showing the top 10 in terms of contribution to the first and to the second axis.
+
+We can find that Honda Civic and Toyota Corolla contribute the most and have the strongest influence on the axis. Luxury and larger cars also contribute significantly
+
+Maserati Bora has the highest contribution and Ford Pantera L and Ferrari Dino also contribute significantly
+
+```{r}
+# your code goes here
+fviz_contrib(pca_result, choice = "ind", axes = 1, top = 10)
+fviz_contrib(pca_result, choice = "ind", axes = 2, top = 10)
+```
+
+------------------------------------------------------------------------
