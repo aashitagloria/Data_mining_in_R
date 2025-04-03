@@ -1,0 +1,8 @@
+	Item.1	Item.2	Item.3	Item.4
+Type A	69	37	7	5
+Type B	148	45	14	22
+Type C	170	65	12	29
+Type D	159	57	12	28
+Type E	122	26	6	18
+Type F	106	21	5	23
+Type G	40	7	1	14
