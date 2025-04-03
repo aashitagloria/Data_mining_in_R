@@ -1,5 +1,5 @@
 # 1. Import the data
-Data <- read.table(file="~/Desktop/Dropbox/Stat/Didattica/Dati/Music-exemple_EN.txt",header=T,row.names=1,sep="\t")
+Data <- read.table(file="Music-exemple_EN.txt",header=T,row.names=1,sep="\t")
 View(Data)
 summary(Data)
 
