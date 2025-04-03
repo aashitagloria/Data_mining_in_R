@@ -14,7 +14,7 @@ library(ca)
 #############################################################################################################################################################
 # Data handling and chi2 test of indipendece
 #############################################################################################################################################################
-Data <- read.table(file="/Users/Laura/Desktop/Dropbox/Stat/Didattica/Dati/Preferences-ACB.txt",header=T,row.names=1,sep="\t")
+Data <- read.table(file="Preferences-ACB.txt",header=T,row.names=1,sep="\t")
 # Data <- read.xlsx("/Users/Laura/Desktop/Dropbox/Stat/Didattica/Dati/health.xls")
 View(Data) # is a "data.frame" 
 Data <- as.table(as.matrix(Data))
