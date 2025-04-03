@@ -1,4 +1,5 @@
-setwd("/Users/Laura/Desktop/Dropbox/Stat/Didattica/AA 2021-2022/3.Master  ALES - Statistical Learning and Data Mining/")
+# To set the working directory
+#setwd("/Users/Laura/Desktop/Dropbox/Stat/Didattica/AA 2021-2022/3.Master  ALES - Statistical Learning and Data Mining/")
 
 # 1. Import the data
 auto<-read.table("Datasets/auto89 (used for PCA in the slides).txt",header=T,row.names=1,na.strings = "",sep="\t",dec=".")
