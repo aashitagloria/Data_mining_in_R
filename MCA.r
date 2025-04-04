@@ -17,7 +17,7 @@ library(readxl) # for reading excel file
 ##########################################################################################
 # Data handling and simple statistics                                                    #
 ##########################################################################################
-Data <- read_excel("~/Library/CloudStorage/Dropbox/Stat/Didattica/Dati/Races-canines.xlsx")
+Data <- read_excel("Races-canines.xlsx")
 head(Data)
 row_names=Data$Race
 Data <- as.data.frame(Data[,-1],stringsAsFactors=T)
