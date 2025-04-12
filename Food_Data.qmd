@@ -1,0 +1,360 @@
+---
+title: "Food_Data"
+format: html
+editor: visual
+embed-resources: true
+---
+
+------------------------------------------------------------------------
+
+# Introduction
+
+Group members:
+
+Alexis TARIS
+
+Tom TREMEREL
+
+Aashita Gloria NOAH
+
+Saanika MAMORIA
+
+Helene QU
+
+Published on RPub: <https://rpubs.com/aashitax/1295523>
+
+In this presentation, we will analyze the relationship between countries and their cuisine preferences using Correspondence Analysis (CA) on the dataset provided.
+
+📂 **Dataset: “World’s Favourite Cuisines”**
+
+Contains responses from **24 countries**, across **34 international cuisines**.
+
+-   Each data point represents the number of people who expressed a preference for a specific cuisine in a given country.
+
+-   The data captures real-world culinary trends and global taste diversity.
+
+🎯 **Business Objective:**
+
+-   Analyze whether a relationship exists between countries and their cuisine preferences.
+
+-   Identify groups of countries with similar culinary tastes to uncover regional and cultural patterns
+
+------------------------------------------------------------------------
+
+------------------------------------------------------------------------
+
+# Data Loading
+
+We begin by loading the dataset and cleaning it up:
+
+```{r}
+library(ca) 
+library(dplyr) 
+library(FactoMineR)
+library(FactoMineR)
+library(factoextra)
+
+cuisine <- read.delim("Cusine-pref-raw.txt", header=T, na.strings = "", sep="\t", dec=".") 
+row.names(cuisine) <- cuisine$X
+cuisine <- cuisine[,-1]
+```
+
+# Descriptive Statistics
+
+We run some basic descriptive statistics to check the total number of cuisines, countries, and Top 5 most preferred Cuisines globally
+
+```{r}
+# Number of cuisines and countries 
+num_cuisines <- nrow(cuisine)
+num_countries <- ncol(cuisine)
+
+cat("Number of Cuisines:", num_cuisines, "\n")
+cat("Number of Countries:", num_countries, "\n")
+
+# Total preference count per cuisine
+cuisine_totals <- rowSums(cuisine)
+cuisine_totals <- sort(cuisine_totals, decreasing = TRUE)
+
+# Top 5 most preferred cuisines globally
+top5_cuisines <- head(cuisine_totals, 5)
+top5_cuisines
+
+library(knitr)
+kable(as.data.frame(top5_cuisines), col.names = c("Cuisine", "Total Count"), caption = "Top 5 Most Preferred Cuisines Globally")
+
+```
+
+# Per-Cuisine Summary Statistics
+
+```{r}
+
+cuisine_stats <- data.frame(
+  Mean = round(rowMeans(cuisine), 2),
+  Median = apply(cuisine, 1, median),
+  Min = apply(cuisine, 1, min),
+  Max = apply(cuisine, 1, max),
+  SD = apply(cuisine, 1, sd)
+)
+
+kable(head(cuisine_stats, 10), 
+      caption = "Summary Statistics for First 10 Cuisines")
+
+
+```
+
+# Per-Country Summary Statistics
+
+```{r}
+
+country_stats <- data.frame(
+  Mean = round(colMeans(cuisine), 2),
+  Median = apply(cuisine, 2, median),
+  Min = apply(cuisine, 2, min),
+  Max = apply(cuisine, 2, max),
+  SD = apply(cuisine, 2, sd)
+)
+
+kable(head(country_stats, 10), 
+      caption = "Summary Statistics for First 10 Countries")
+
+```
+
+# Bar Plot – Top 10 Most Preferred Cuisines Globally
+
+```{r}
+library(ggplot2)
+
+# Recalculate cuisine totals and sort
+cuisine_totals <- rowSums(cuisine)
+cuisine_totals_sorted <- sort(cuisine_totals, decreasing = TRUE)
+
+# Create data frame for top 10
+top10_df <- data.frame(
+  Cuisine = names(cuisine_totals_sorted[1:10]),
+  Total = cuisine_totals_sorted[1:10]
+)
+
+# Plot
+ggplot(top10_df, aes(x = reorder(Cuisine, Total), y = Total)) +
+  geom_bar(stat = "identity", fill = "steelblue") +
+  coord_flip() +
+  labs(title = "Top 10 Most Preferred Cuisines Globally",
+       x = "Cuisine",
+       y = "Total Preference Count") +
+  theme_minimal()
+
+
+```
+
+------------------------------------------------------------------------
+
+# Chi-square Test of Independence
+
+Next, we perform a Chi-Square test to check the relationship between countries and their cuisine preferences.
+
+```{r}
+cuisine <- as.table(as.matrix(cuisine))
+chi <- chisq.test(cuisine)
+chi
+```
+
+The p-value is extremely small (\< 2.2e-16), indicating a highly significant relationship between countries and their cuisine preferences.
+
+# Phi-squared Statistic
+
+We calculate the Phi-squared statistic, which measures the strength of association between countries and their cuisine preferences.
+
+```{r}
+Phi2 <- chi$statistic / sum(cuisine)
+Phi2
+```
+
+The Phi-squared statistic is 0.0685, indicating a weak association between countries and their cuisine preferences.
+
+# Normalized Phi-squared
+
+We normalize the Phi-squared value to understand the relative strength of the association.
+
+```{r}
+J <- ncol(cuisine) 
+I <- nrow(cuisine)
+(I-1)*(J-1) 
+max_Phi <- (min(I,J)-1)
+Phi2/max_Phi
+```
+
+The normalized Phi-squared value is close to 0, suggesting a weak strength of association between countries and their cuisine preferences.
+
+# Row Marginal Frequencies
+
+We calculate the row and column proportions to better understand the distribution of preferences:
+
+```{r}
+cuisine<- as.table(as.matrix(cuisine))
+F <- as.matrix(prop.table(cuisine))
+Row.F <- prop.table(cuisine, margin=1)
+round(addmargins(Row.F), 3)
+Row.F <- as.data.frame(Row.F)
+```
+
+This table provides insight into the most frequent cuisine preferences in each country. For example, in Australia, Australian food is the most frequent.
+
+# Column Marginal Frequencies
+
+We also calculate the column proportions to see the distribution of cuisines across countries
+
+```{r}
+Col.F <- prop.table(cuisine, margin=2)
+round(addmargins(Col.F), 3)
+Col.F <- as.data.frame(Col.F)
+```
+
+This shows how the cuisines are distributed across different countries.
+
+# Correspondence Analysis
+
+We perform Correspondence Analysis (CA) to visualize the relationship between countries and cuisines.
+
+```{r}
+results <- CA(cuisine)
+summary(results)
+results$col
+```
+
+The CA results provide us with information about how countries and cuisines relate in a low-dimensional space.
+
+On this map we can already make some conclusions about the relationship between the regions and the cuisines, with Occidental, Oriental and Asian region.
+
+# Scree plot analysis
+
+This visualization presents the percentage of variance explained by each dimension in our culinary preferences analysis. The scree plot is a critical tool for determining how many dimensions we should retain for meaningful interpretation. Each bar represents one dimension, with its height indicating the proportion of total variance explained by that dimension.
+
+```{r}
+# Sccreeplot with fviz_screeplot
+fviz_screeplot(results, 
+               addlabels = TRUE,  # Add percentage values
+               ncp = 10,          # Display the first 10 dimensions
+               choice = "variance",
+               main = "Percentage of Variance Explained by Dimensions",
+               xlab = "Dimensions",
+               ylab = "Percentage of Explained Variance",
+               barfill = "steelblue", 
+               barcolor = "steelblue",
+               linecolor = "red") +
+  geom_hline(yintercept = 1/(ncol(results$row$coord))*100, 
+             linetype = "dashed", 
+             color = "gray70")
+```
+
+# Elbow method
+
+After extracting country coordinates from our first two principal dimensions, we apply the elbow method to identify the optimal number of clusters. This method plots the within-cluster sum of squares against different cluster counts, helping us find where adding more clusters provides diminishing returns.
+
+Based on our analysis, k=3 emerges as the optimal choice, indicating three distinct culinary preference patterns exist among countries. This selection balances between describing meaningful differences while avoiding unnecessary complexity in our classification.
+
+```{r}
+# Récupérer les coordonnées des individus (limité aux 2 premières dimensions)
+ind_coordinates <- results$row$coord[, 1:2]
+
+# Méthode du coude
+fviz_nbclust(ind_coordinates, kmeans, method = "wss") +
+  labs(title = "Elbow method")
+```
+
+## K-means Clustering of Culinary Preferences
+
+After determining three as our optimal number of clusters, we apply K-means clustering to group countries based on their culinary preference patterns. Setting a seed ensures our analysis is reproducible.
+
+The visualization displays countries positioned according to their coordinates on the first two principal dimensions, with each cluster represented by a different color. Countries within the same cluster share similar culinary preferences, while those in different clusters exhibit distinct patterns. The convex hulls drawn around each cluster help visualize their boundaries and separation.
+
+The text labels identify individual countries, with a repel feature preventing overlap for better readability. This clustering provides a meaningful segmentation of global culinary landscapes, revealing how geographical, cultural, or historical factors may influence food preferences across different regions of the world.
+
+```{r}
+# Clustering avec K-means
+set.seed(123)  # Pour la reproductibilité
+k <- 3  # Choisir le nombre de clusters
+kmeans_result <- kmeans(ind_coordinates, centers = k)
+
+# Visualisation des clusters avec étiquettes forcées
+p <- fviz_cluster(kmeans_result, 
+                  data = ind_coordinates,
+                  geom = c("point", "text"),
+                  stand = TRUE,
+                  ellipse.type = "convex",
+                  repel = TRUE,
+                  ggtheme = theme_minimal(),
+                  main = "Clustering of Countries Based on Culinary Preferences")
+
+# Afficher le graphique
+print(p)
+
+```
+
+# Clustering sizes
+
+This bar chart illustrates how countries are distributed among our three identified culinary preference clusters. Each bar represents a cluster, with the count of countries displayed above.
+
+The varying sizes help us quickly identify which culinary patterns are more common globally versus those that represent more distinctive traditions. This simple visualization quantifies the membership of each culinary group, providing context for our subsequent interpretation of what characterizes each cluster of countries.
+
+```{r}
+# Cluster sizes
+cluster_sizes <- table(kmeans_result$cluster)
+bp <- barplot(cluster_sizes, 
+              main = "Cluster Sizes",
+              xlab = "Cluster", 
+              ylab = "Number of Countries",
+              col = "steelblue",
+              ylim = c(0, max(cluster_sizes) * 1.2)) # Increase y-axis limit to make room for labels
+
+# Add text labels on top of each bar showing count
+text(x = bp, 
+     y = cluster_sizes + max(cluster_sizes) * 0.05, # Position labels slightly above bars
+     labels = cluster_sizes, 
+     col = "black",
+     font = 2)
+
+```
+
+# Dispersion within Clusters
+
+This boxplot shows how tightly grouped countries are within each culinary cluster by measuring their distances from cluster centers.
+
+Clusters with lower distances indicate groups of countries sharing very similar culinary preferences, while higher distances suggest more diverse traditions within that cluster. This visualization helps us evaluate the internal cohesion of each culinary pattern and understand which clusters represent more uniform versus more varied preference groups.
+
+```{r}
+# Distance des points au centre de leur cluster
+within_cluster_distances <- rep(0, nrow(ind_coordinates))
+for(i in 1:nrow(ind_coordinates)) {
+  cluster_i <- kmeans_result$cluster[i]
+  center_i <- kmeans_result$centers[cluster_i,]
+  within_cluster_distances[i] <- dist(rbind(ind_coordinates[i,], center_i))
+}
+
+boxplot(within_cluster_distances ~ kmeans_result$cluster, 
+        main = "Dispersion within Clusters",
+        xlab = "Cluster", 
+        ylab = "Distance to Center")
+
+```
+
+# Conclusion
+
+This analysis highlights culinary preferences across 24 countries and 34 cuisines, using a combination of descriptive statistics, independence tests, and exploratory methods. Italian, Chinese, and Mexican cuisines emerge as the most globally preferred.
+
+The chi-square test reveals a statistically significant relationship between countries and cuisines, but with weak association strength (Phi² ≈ 0.068, normalized ≈ 0.003), reflecting high diversity in preferences both between and within countries.
+
+Correspondence Analysis (CA) was then used to visualize these complex relationships, revealing clusters of countries and cuisines with similar profiles. Finally, clustering techniques helped identify coherent groups, illustrating regional or cultural similarities in food preferences.
+
+In summary, culinary preferences are both globalized and culturally rooted, and the multidimensional approach used here provides valuable insights into global taste patterns.
+
+# Business Insights and Recommendations:
+
+Italian, Chinese, and Mexican cuisines are top global performers, making them ideal anchors for international menus. Quick Service Restaurants (QSRs), food delivery platforms, and international hotel chains can prioritize these cuisines in multicultural markets. Food brands may also focus on product development around these cuisines to maximize global appeal.
+
+Despite globalization, countries still exhibit cultural alignment in their culinary preferences. This insight supports region-specific marketing strategies and localized offerings. For instance, a food chain expanding in Southeast Asia could use similar menus across culturally clustered countries like Indonesia, Malaysia, and Thailand.
+
+The low association strength (Phi² ≈ 0.068) indicates there is no universal food preference pattern, highlighting the need for personalized marketing strategies. This opens the door for hyper-localized recommendation systems and individualized promotions based on regional or demographic nuances. Companies should avoid generalizing taste preferences across continents.
+
+The use of Correspondence Analysis and Clustering techniques further revealed hidden groupings of countries with similar food profiles. Brands can leverage these “preference clusters” to guide launch sequencing, tailor marketing campaigns, and optimize menu planning based on regional affinities.
+
+Lastly, new brands or restaurants entering global markets can start with universally loved cuisines and then use these cluster-based insights to expand gradually into more culturally specific offerings. This phased approach ensures higher acceptance and more sustainable market penetration.
